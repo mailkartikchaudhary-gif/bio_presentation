@@ -33,22 +33,22 @@
       {prompt:'A Monstera leaf has no stem node. What is most likely to happen?',choices:['It will not grow a new shoot','It will quickly grow into a full plant','It will form a callus in nutrient medium'],answer:0,hint:'A cutting needs a stem node for new growth.'}
     ];
     const main=document.querySelector('#main'),scoreLabel=document.querySelector('#score');
-    let index=0,score=0,answered=false;
+    let index=0,score=0,answered=false,missed=false;
     function updateScore(){scoreLabel.textContent=`Score: ${score} / 3`}
     function renderWelcome(){
       main.innerHTML=`<section class="welcome"><div class="hero" aria-hidden="true">🌿</div><p class="kicker">Ready to play?</p><h2>Can you match each clue to the right method?</h2><p>Three short challenges on cutting, layering and grafting. Get a point for each correct first try. If you miss one, you can try again.</p><button class="primary" id="start">Start the quiz</button><p class="source">Based on the textbook topics in the presentation.</p></section>`;
       document.querySelector('#start').addEventListener('click',()=>renderQuestion());
     }
     function renderQuestion(){
-      answered=false;const q=questions[index];const pct=(index/questions.length)*100;
+      answered=false;missed=false;const q=questions[index];const pct=(index/questions.length)*100;
       main.innerHTML=`<div class="progress-row"><span class="progress-label">Challenge ${index+1} of ${questions.length}</span><div class="track" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="3" aria-valuenow="${index}"><div class="fill" style="width:${pct}%"></div></div></div><p class="kicker">Choose one answer</p><h2>${q.prompt}</h2><div class="choices">${q.choices.map((c,i)=>`<button class="choice" data-choice="${i}">${String.fromCharCode(65+i)} &nbsp; ${c}</button>`).join('')}</div><p class="feedback" id="feedback" role="status">Pick an answer to see what happens.</p><div class="actions"><span class="hint">One point for a correct first try</span><button class="primary" id="next" hidden>${index===questions.length-1?'See my score':'Next challenge'}</button></div><p class="source">Based on the textbook topics in the presentation.</p>`;
       document.querySelectorAll('.choice').forEach(button=>button.addEventListener('click',()=>choose(Number(button.dataset.choice))));
       document.querySelector('#next').addEventListener('click',()=>{index++;if(index<questions.length)renderQuestion();else renderFinish()});
     }
     function choose(choice){
       if(answered)return;const q=questions[index],buttons=[...document.querySelectorAll('.choice')],feedback=document.querySelector('#feedback');
-      if(choice===q.answer){answered=true;score++;updateScore();buttons[choice].classList.add('good');buttons.forEach(b=>b.disabled=true);feedback.className='feedback success';feedback.textContent='That’s right! Great job.';document.querySelector('#next').hidden=false;document.querySelector('.fill').style.width=`${((index+1)/questions.length)*100}%`;document.querySelector('.track').setAttribute('aria-valuenow',String(index+1))}
-      else{buttons[choice].classList.add('bad');buttons[choice].disabled=true;feedback.className='feedback retry';feedback.textContent=`Not quite. ${q.hint} Try another answer.`}
+      if(choice===q.answer){answered=true;if(!missed){score++;updateScore();}buttons[choice].classList.add('good');buttons.forEach(b=>b.disabled=true);feedback.className='feedback success';feedback.textContent='That’s right! Great job.';document.querySelector('#next').hidden=false;document.querySelector('.fill').style.width=`${((index+1)/questions.length)*100}%`;document.querySelector('.track').setAttribute('aria-valuenow',String(index+1))}
+      else{missed=true;buttons[choice].classList.add('bad');buttons[choice].disabled=true;feedback.className='feedback retry';feedback.textContent=`Not quite. ${q.hint} Try another answer.`}
     }
     function renderFinish(){
       const message=score===3?'Perfect score! You know your propagation methods.':score===0?'Good try. Take another look at the clues, then play again.':'Nice work. A replay can help you remember the tricky ones.';
