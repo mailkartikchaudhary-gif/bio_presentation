@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173a2b">
+  <title>Propagation Quest</title>
+  <style>
+    :root{color-scheme:light;--forest:#173a2b;--leaf:#3d7651;--lime:#d9ec9b;--cream:#f6f4eb;--paper:#fffdf7;--ink:#1c3429;--muted:#62776a;--orange:#e0a148;--red:#b64d3b;--line:#d7dfd2}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--forest);font-family:Arial,Helvetica,sans-serif;color:var(--ink);display:grid;place-items:center;padding:24px}
+    .app{width:min(760px,100%);background:var(--cream);border-radius:24px;overflow:hidden;box-shadow:0 24px 70px #09221766}
+    header{padding:24px 32px 20px;background:var(--forest);color:white;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}.leaf{font-size:30px;line-height:1}.eyebrow{margin:0 0 4px;color:var(--lime);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase}h1{margin:0;font-size:25px;letter-spacing:-.02em}.score{font-weight:700;color:var(--lime);white-space:nowrap}
+    main{padding:34px 36px 36px}.progress-row{display:flex;align-items:center;gap:14px;margin-bottom:28px}.progress-label{font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}.track{height:8px;border-radius:99px;background:#e0e6da;overflow:hidden;flex:1}.fill{height:100%;width:0;background:var(--leaf);border-radius:inherit;transition:width .3s ease}
+    .kicker{margin:0 0 12px;color:var(--leaf);font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}h2{margin:0 0 25px;font-size:clamp(24px,4vw,34px);line-height:1.2;letter-spacing:-.025em}.choices{display:grid;gap:12px}.choice{width:100%;min-height:62px;text-align:left;border:2px solid var(--line);border-radius:14px;background:var(--paper);padding:15px 18px;color:var(--ink);font-size:18px;font-weight:700;cursor:pointer;transition:border-color .15s ease,transform .15s ease,background .15s ease}.choice:hover{border-color:var(--leaf);transform:translateY(-1px)}.choice:focus-visible,button:focus-visible{outline:3px solid var(--orange);outline-offset:3px}.choice[disabled]{cursor:default;transform:none}.choice.good{border-color:var(--leaf);background:#e7f0e3}.choice.bad{border-color:#d98a7d;background:#f9e9e5}
+    .feedback{min-height:46px;margin:18px 0 2px;padding:0;color:var(--muted);font-size:16px;line-height:1.45}.feedback.success{color:var(--leaf);font-weight:700}.feedback.retry{color:var(--red);font-weight:700}.actions{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px}.hint{font-size:14px;color:var(--muted)}.primary{border:0;border-radius:12px;background:var(--leaf);color:white;padding:15px 22px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 3px 0 #28553a}.primary:hover{background:#315f43}.primary:active{transform:translateY(1px);box-shadow:0 2px 0 #28553a}.primary[hidden]{display:none}
+    .welcome,.finish{text-align:center;padding:18px 8px 8px}.hero{font-size:64px;margin-bottom:10px}.welcome h2,.finish h2{margin-bottom:12px}.welcome p,.finish p{max-width:520px;margin:0 auto 24px;color:var(--muted);font-size:18px;line-height:1.55}.welcome .primary,.finish .primary{min-width:190px}.score-big{font-size:44px;color:var(--leaf);font-weight:800;margin:10px 0}.source{margin:24px 0 0;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center}
+    @media(max-width:520px){body{padding:12px}.app{border-radius:18px}header{padding:20px}.score{font-size:14px}main{padding:25px 20px 26px}.choice{font-size:16px}.actions{align-items:flex-start;flex-direction:column}.actions .primary{width:100%}.hero{font-size:52px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand"><span class="leaf" aria-hidden="true">🌱</span><div><p class="eyebrow">Interactive quiz</p><h1>Propagation Quest</h1></div></div>
+      <div class="score" id="score" aria-live="polite">Score: 0 / 3</div>
+    </header>
+    <main id="main" aria-live="polite"></main>
+  </div>
+  <script>
+    const questions=[
+      {prompt:'A branch stays attached while roots grow in moist soil. Which method is this?',choices:['Cutting','Layering','Tissue culture'],answer:1,hint:'Think about the method where the branch remains connected to its parent.'},
+      {prompt:'In grafting, what does the scion contribute?',choices:['The desired variety and its buds','The soil and nutrients','The root system'],answer:0,hint:'The stock provides the root system. Which part carries the chosen variety?'},
+      {prompt:'A Monstera leaf has no stem node. What is most likely to happen?',choices:['It will not grow a new shoot','It will quickly grow into a full plant','It will form a callus in nutrient medium'],answer:0,hint:'A cutting needs a stem node for new growth.'}
+    ];
+    const main=document.querySelector('#main'),scoreLabel=document.querySelector('#score');
+    let index=0,score=0,answered=false,missed=false;
+    function updateScore(){scoreLabel.textContent=`Score: ${score} / 3`}
+    function renderWelcome(){
+      main.innerHTML=`<section class="welcome"><div class="hero" aria-hidden="true">🌿</div><p class="kicker">Ready to play?</p><h2>Can you match each clue to the right method?</h2><p>Three short challenges on cutting, layering and grafting. Get a point for each correct first try. If you miss one, you can try again.</p><button class="primary" id="start">Start the quiz</button><p class="source">Based on the textbook topics in the presentation.</p></section>`;
+      document.querySelector('#start').addEventListener('click',()=>renderQuestion());
+    }
+    function renderQuestion(){
+      answered=false;missed=false;const q=questions[index];const pct=(index/questions.length)*100;
+      main.innerHTML=`<div class="progress-row"><span class="progress-label">Challenge ${index+1} of ${questions.length}</span><div class="track" role="progressbar" aria-label="Quiz progress" aria-valuemin="0" aria-valuemax="3" aria-valuenow="${index}"><div class="fill" style="width:${pct}%"></div></div></div><p class="kicker">Choose one answer</p><h2>${q.prompt}</h2><div class="choices">${q.choices.map((c,i)=>`<button class="choice" data-choice="${i}">${String.fromCharCode(65+i)} &nbsp; ${c}</button>`).join('')}</div><p class="feedback" id="feedback" role="status">Pick an answer to see what happens.</p><div class="actions"><span class="hint">One point for a correct first try</span><button class="primary" id="next" hidden>${index===questions.length-1?'See my score':'Next challenge'}</button></div><p class="source">Based on the textbook topics in the presentation.</p>`;
+      document.querySelectorAll('.choice').forEach(button=>button.addEventListener('click',()=>choose(Number(button.dataset.choice))));
+      document.querySelector('#next').addEventListener('click',()=>{index++;if(index<questions.length)renderQuestion();else renderFinish()});
+    }
+    function choose(choice){
+      if(answered)return;const q=questions[index],buttons=[...document.querySelectorAll('.choice')],feedback=document.querySelector('#feedback');
+      if(choice===q.answer){answered=true;if(!missed){score++;updateScore();}buttons[choice].classList.add('good');buttons.forEach(b=>b.disabled=true);feedback.className='feedback success';feedback.textContent='That’s right! Great job.';document.querySelector('#next').hidden=false;document.querySelector('.fill').style.width=`${((index+1)/questions.length)*100}%`;document.querySelector('.track').setAttribute('aria-valuenow',String(index+1))}
+      else{missed=true;buttons[choice].classList.add('bad');buttons[choice].disabled=true;feedback.className='feedback retry';feedback.textContent=`Not quite. ${q.hint} Try another answer.`}
+    }
+    function renderFinish(){
+      const message=score===3?'Perfect score! You know your propagation methods.':score===0?'Good try. Take another look at the clues, then play again.':'Nice work. A replay can help you remember the tricky ones.';
+      main.innerHTML=`<section class="finish"><div class="hero" aria-hidden="true">🌼</div><p class="kicker">Quest complete</p><h2>${score===3?'Plant propagation pro!':'You finished the quest!'}</h2><div class="score-big">${score} / 3</div><p>${message}</p><button class="primary" id="replay">Play again</button><p class="source">Answers: layering · scion · cutting with a stem node</p></section>`;
+      document.querySelector('#replay').addEventListener('click',()=>{index=0;score=0;updateScore();renderWelcome()});
+    }
+    updateScore();renderWelcome();
+  </script>
+</body>
+</html>
